@@ -1,0 +1,6 @@
+{
+    "name": "root/reactphp-whois",
+    "require": {
+        "umpirsky/wisdom": "dev-master"
+    }
+}
