@@ -1,45 +1,48 @@
 #!/usr/bin/php
 <?php
 
-/**
- * This file is part of the Wisdom project.
- *
- *  (c) Саша Стаменковић <umpirsky@gmail.com>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
 
 require __DIR__.'/../vendor/autoload.php';
 
 $loop = React\EventLoop\Factory::create();
 $factory = new React\Dns\Resolver\Factory();
 $resolver = $factory->create('8.8.8.8', $loop);
-$connFactory = new React\Whois\ConnectionFactory($loop);
+$conn_factory = new React\Whois\ConnectionFactory($loop);
+$whois_client = new React\Whois\Client($resolver, $conn_factory);
+
+$wisdom = new Wisdom\Wisdom($whois_client);
 
 $domains = array(
-    'umpirsky.com',
-    'umpirsky.net',
+    'google.com',
+    'yahoo.com',
+	'apple.com',
+	'microsoft.com',
+	'amazon.com',
+	'reactphp.org',
+	'stevemeyers.net',
+	'invaliddomain195435.com',
 );
 
-$wisdom = new Wisdom\Wisdom(new React\Whois\Client($resolver, $connFactory));
-$wisdom
-    ->check('igor.io')
-    ->then(function ($available) {
-        $domain = 'igor.io';
-        printf('Domain %s is %s.%s', $domain, $available ? 'available' : 'taken', PHP_EOL);
-    });
-$wisdom
-    ->checkAll($domains)
-    ->then(function ($statuses) {
-        foreach ($statuses as $domain => $available) {
-            printf('Domain %s is %s.%s', $domain, $available ? 'available' : 'taken', PHP_EOL);
-        }
-    });
 
-echo 'Checking domains...'.PHP_EOL;
+if (isset($argv[1]) && $argv[1] === "--single") {
+	echo "Checking domains one at a time...\n\n";
+	foreach ($domains as $domain) {
+		$wisdom->check($domain)->then(function ($available) use ($domain) {
+			printf("Domain %s is %s.\n", $domain, $available ? 'available' : 'taken');
+		});
+	}
+} else {
+	// This currently gives bogus results, as the mapping from domain to result isn't applied correctly
+	// https://github.com/umpirsky/wisdom/pull/17
+	echo "Checking domains all at once...\n\n";
+	$wisdom->checkAll($domains)->then(function ($statuses) {
+		foreach ($statuses as $domain => $available) {
+			printf("Domain %s is %s.\n", $domain, $available ? 'available' : 'taken');
+		}
+	});
+}
 
 $loop->run();
 
 
-echo "Done!\n";
+echo "\n\nDone!\n";
