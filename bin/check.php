@@ -13,8 +13,8 @@ $whois_client = new React\Whois\Client($resolver, $conn_factory);
 $wisdom = new Wisdom\Wisdom($whois_client);
 
 $domains = array(
-    'google.com',
-    'yahoo.com',
+	'google.com',
+	'yahoo.com',
 	'apple.com',
 	'microsoft.com',
 	'amazon.com',
